@@ -153,18 +153,44 @@ void librealsense::record_device::write_data(size_t sensor_index, librealsense::
             }
         });
 
-        try
+        switch (sensor_index)
         {
-            const uint32_t device_index = 0;
-            auto stream_type = frame_holder_ptr->frame->get_stream()->get_stream_type();
-            auto stream_index = static_cast<uint32_t>(frame_holder_ptr->frame->get_stream()->get_stream_index());
-            m_ros_writer->write_frame({ device_index, static_cast<uint32_t>(sensor_index), stream_type, stream_index }, capture_time, std::move(*frame_holder_ptr));
-            //TODO: restore: std::lock_guard<std::mutex> locker(m_mutex);  m_cached_data_size -= data_size;
+		case 0:
+			std::call_once(m_first_color_flag, [&]()
+			{
+				try
+				{
+					const uint32_t device_index = 0;
+					auto stream_type = frame_holder_ptr->frame->get_stream()->get_stream_type();
+					auto stream_index = static_cast<uint32_t>(frame_holder_ptr->frame->get_stream()->get_stream_index());
+					m_ros_writer->write_frame({ device_index, static_cast<uint32_t>(sensor_index), stream_type, stream_index }, capture_time, std::move(*frame_holder_ptr));
+					//TODO: restore: std::lock_guard<std::mutex> locker(m_mutex);  m_cached_data_size -= data_size;
+				}
+				catch (std::exception& e)
+				{
+					on_error(to_string() << "Failed to write frame. " << e.what());
+				}
+			});
+			break;
+		default:
+			std::call_once(m_first_depth_flag, [&]()
+			{
+				try
+				{
+					const uint32_t device_index = 0;
+					auto stream_type = frame_holder_ptr->frame->get_stream()->get_stream_type();
+					auto stream_index = static_cast<uint32_t>(frame_holder_ptr->frame->get_stream()->get_stream_index());
+					m_ros_writer->write_frame({ device_index, static_cast<uint32_t>(sensor_index), stream_type, stream_index }, capture_time, std::move(*frame_holder_ptr));
+					//TODO: restore: std::lock_guard<std::mutex> locker(m_mutex);  m_cached_data_size -= data_size;
+				}
+				catch (std::exception& e)
+				{
+					on_error(to_string() << "Failed to write frame. " << e.what());
+				}
+			});
+			break;
         }
-        catch(std::exception& e)
-        {
-            on_error(to_string() << "Failed to write frame. " << e.what());
-        }
+
     });
 }
 

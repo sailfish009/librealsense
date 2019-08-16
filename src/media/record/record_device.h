@@ -73,6 +73,8 @@ namespace librealsense
         std::mutex m_mutex;
         bool m_is_recording;
         std::once_flag m_first_frame_flag;
+        std::once_flag m_first_color_flag;
+        std::once_flag m_first_depth_flag;
         int m_on_notification_token;
         int m_on_frame_token;
         int m_on_extension_change_token;
