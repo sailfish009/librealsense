@@ -29,6 +29,10 @@ int main(int argc, char * argv[]) try
 
     rs2::pipeline pipe;
     rs2::config cfg;
+
+    cfg.enable_stream(RS2_STREAM_COLOR, 1920, 1080, RS2_FORMAT_RGBA8, 15);
+    cfg.enable_stream(RS2_STREAM_DEPTH, 1280, 720, RS2_FORMAT_Z16, 15);
+
     cfg.enable_record_to_file(out_file.getValue());
 
     std::mutex m;
@@ -46,6 +50,14 @@ int main(int argc, char * argv[]) try
     };
 
     rs2::pipeline_profile profiles = pipe.start(cfg, callback);
+
+    auto color_sensor = profiles.get_device().query_sensors()[1];
+    auto depth_sensor = profiles.get_device().query_sensors()[0];
+    color_sensor.set_option(RS2_OPTION_ENABLE_AUTO_EXPOSURE, 0);
+    color_sensor.set_option(RS2_OPTION_EXPOSURE, 330);
+    color_sensor.set_option(RS2_OPTION_GAIN, 64);
+    depth_sensor.set_option(RS2_OPTION_ENABLE_AUTO_EXPOSURE, 1);
+    depth_sensor.set_option(RS2_OPTION_LASER_POWER, 360);
 
     auto t = std::chrono::system_clock::now();
     auto t0 = t;
